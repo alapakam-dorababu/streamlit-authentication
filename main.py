@@ -39,33 +39,36 @@ authenticator = stauth.Authenticate(
 )
 
 
-try:
-    authenticator.login()
-except Exception as e:
-    st.error(e)
-    
-    
+# if user is not logged in, show login/register tabs
 if not st.session_state.get("authentication_status"):
-    st.subheader("Register New User")
-    new_name = st.text_input("Name", key="reg_name")
-    new_username = st.text_input("Username", key="reg_user")
-    new_password = st.text_input("Password", type="password", key="reg_pass")
+    login_tab, register_tab = st.tabs(["Login", "Register"])
 
-    if st.button("Register"):
-        cursor.execute("SELECT * FROM users WHERE username=?", (new_username,))
-        if cursor.fetchone():
-            st.warning("Username already exists.")
-        elif not (new_name and new_username and new_password):
-            st.warning("Please fill all fields.")
-        else:
-            # Optionally hash password
-            # hashed_password = stauth.Hasher([new_password]).generate()
-            cursor.execute(
-                "INSERT INTO users (username, name, password) VALUES (?, ?, ?)",
-                (new_username, new_name, new_password)
-            )
-            conn.commit()
-            st.success("User registered successfully!")
+    with login_tab:
+        st.subheader("Login")
+        try:
+            authenticator.login()
+        except Exception as e:
+            st.error(e)
+
+    with register_tab:
+        st.subheader("Register New User")
+        new_name = st.text_input("Name", key="reg_name")
+        new_username = st.text_input("Username", key="reg_user")
+        new_password = st.text_input("Password", type="password", key="reg_pass")
+
+        if st.button("Register"):
+            cursor.execute("SELECT * FROM users WHERE username=?", (new_username,))
+            if cursor.fetchone():
+                st.warning("Username already exists.")
+            elif not (new_name and new_username and new_password):
+                st.warning("Please fill all fields.")
+            else:
+                cursor.execute(
+                    "INSERT INTO users (username, name, password) VALUES (?, ?, ?)",
+                    (new_username, new_name, new_password)
+                )
+                conn.commit()
+                st.success("User registered successfully!")
 
 
 # --- Main UI logic ---
